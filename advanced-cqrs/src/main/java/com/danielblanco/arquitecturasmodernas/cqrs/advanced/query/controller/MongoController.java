@@ -2,6 +2,7 @@ package com.danielblanco.arquitecturasmodernas.cqrs.advanced.query.controller;
 
 import com.danielblanco.arquitecturasmodernas.cqrs.advanced.query.model.Post;
 import com.danielblanco.arquitecturasmodernas.cqrs.advanced.query.service.QueryService;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,5 +17,10 @@ public class MongoController {
   @GetMapping("/post/{id}")
   public Post getPost(@PathVariable String id) {
     return queryService.getPost(id);
+  }
+
+  @GetMapping("/posts")
+  public List<Post> getAllPosts() {
+    return queryService.getAllPosts();
   }
 }

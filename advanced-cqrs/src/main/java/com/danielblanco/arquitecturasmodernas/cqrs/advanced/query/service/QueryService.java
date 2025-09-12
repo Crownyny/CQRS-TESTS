@@ -2,6 +2,7 @@ package com.danielblanco.arquitecturasmodernas.cqrs.advanced.query.service;
 
 import com.danielblanco.arquitecturasmodernas.cqrs.advanced.query.model.Post;
 import com.danielblanco.arquitecturasmodernas.cqrs.advanced.query.repository.PostRepository;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,5 +16,9 @@ public class QueryService {
 
   public Post getPost(String id) {
     return postRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+  }
+
+  public List<Post> getAllPosts() {
+    return postRepository.findAll();
   }
 }
