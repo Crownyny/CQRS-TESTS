@@ -1,0 +1,33 @@
+services:
+  mongodb:
+    image: mongo:5.0
+    container_name: cqrs-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: cqrs_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - cqrs-network
+
+  app:
+    build: .
+    container_name: cqrs-app
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    depends_on:
+      - mongodb
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - cqrs-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  cqrs-network:
+    driver: bridge
