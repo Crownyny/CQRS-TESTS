@@ -1,0 +1,40 @@
+==================================================
+ESTADÍSTICAS DE RENDIMIENTO MONGODB
+==================================================
+Fecha y hora: 2025-09-12 15:07:59.815736
+Total de operaciones: 100
+
+OPERACIONES DE INSERCIÓN:
+-------------------------
+Número de operaciones: 50
+Tiempo promedio: 0.78 ms
+Desviación estándar: 0.19 ms
+Tiempo mínimo: 0.50 ms
+Tiempo máximo: 1.23 ms
+Mediana: 0.77 ms
+Tiempo total: 39.11 ms
+
+OPERACIONES DE CONSULTA:
+-------------------------
+Número de operaciones: 50
+Tiempo promedio: 0.85 ms
+Desviación estándar: 0.23 ms
+Tiempo mínimo: 0.42 ms
+Tiempo máximo: 1.71 ms
+Mediana: 0.83 ms
+Tiempo total: 42.55 ms
+
+ESTADÍSTICAS GENERALES:
+---------------------
+Total de operaciones: 100
+Tiempo promedio general: 0.82 ms
+Desviación estándar general: 0.21 ms
+Tiempo total del test: 81.65 ms
+Percentil 50 (mediana): 0.80 ms
+Percentil 90: 1.10 ms
+Percentil 95: 1.17 ms
+Percentil 99: 1.70 ms
+
+COMPARACIÓN:
+------------
+Las consultas son 0.07 ms más lentas que las inserciones en promedio
