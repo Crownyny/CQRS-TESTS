@@ -1,0 +1,60 @@
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:14-alpine
+    container_name: cqrs-postgres-db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5600:5600"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - cqrs-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Aplicación Spring Boot con CQRS
+  cqrs-app:
+    build: .
+    container_name: cqrs-spring-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_FLYWAY_ENABLED: true
+      SPRING_FLYWAY_SCHEMAS: cqrs
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_JPA_PROPERTIES_HIBERNATE_SESSION_EVENTS_LOG_LOG_QUERIES_SLOWER_THAN_MS: 25
+    ports:
+      - "5100:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cqrs-network
+    restart: unless-stopped
+
+  # Adminer para administrar la base de datos (opcional)
+  adminer:
+    image: adminer:4.8.1
+    container_name: cqrs-adminer
+    ports:
+      - "8081:8080"
+    networks:
+      - cqrs-network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_data:
+
+networks:
+  cqrs-network:
+    driver: bridge
