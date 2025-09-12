@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:13-alpine
+    container_name: cqrs-postgres
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "10001:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - cqrs-network
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:5.0
+    container_name: cqrs-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: mongo
+      MONGO_INITDB_DATABASE: admin
+    ports:
+      - "10002:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - cqrs-network
+
+  # Spring Boot Application
+  app:
+    build: .
+    container_name: cqrs-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:mongo@mongodb:27017/admin
+      SPRING_DATA_MONGODB_DATABASE: admin
+      SERVER_PORT: 8087
+    ports:
+      - "8087:8087"
+    depends_on:
+      - postgres
+      - mongodb
+    networks:
+      - cqrs-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  mongo_data:
+
+networks:
+  cqrs-network:
+    driver: bridge
