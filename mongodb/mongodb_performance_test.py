@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
 Script de prueba de rendimiento para API REST (MongoController en localhost:8085)
-Realiza 50 inserciones de posts y 50 consultas, midiendo el tiempo de cada operación
-Genera un archivo CSV con los resultados y un archivo TXT con estadísticas
+Realiza 50 inserciones de reacciones (usando post+comment+reaction) y 50 consultas,
+midiendo el tiempo de cada operación.
+Genera un archivo CSV con los resultados y un archivo TXT con estadísticas.
 """
 
 import time
@@ -16,89 +17,110 @@ from datetime import datetime
 BASE_URL = "http://localhost:8085"
 
 def generate_random_post(index):
-    """Genera un post aleatorio para insertar"""
-    words = ["tecnología", "innovación", "desarrollo", "software", "base de datos", 
-             "rendimiento", "optimización", "escalabilidad", "arquitectura", "microservicios",
-             "MongoDB", "Spring Boot", "Java", "aplicación", "sistema"]
-    
-    content_words = random.sample(words, random.randint(10, 15))
-    content = " ".join(content_words)
-
+    """Genera un post aleatorio"""
     return {
-        "id": f"test_post_{index}_{int(time.time())}_{random.randint(1000, 9999)}",
-        "title": f"Post de prueba número {index}",
-        "content": content
+        "id": f"post_{index}_{int(time.time())}_{random.randint(1000,9999)}",
+        "title": f"Post de prueba {index}",
+        "content": f"Contenido aleatorio del post {index}"
+    }
+
+def generate_random_comment(index):
+    """Genera un comentario aleatorio"""
+    return {
+        "id": f"comment_{index}_{int(time.time())}_{random.randint(1000,9999)}",
+        "author": f"Autor{index}",
+        "content": f"Comentario de prueba {index}"
+    }
+
+def generate_random_reaction(index):
+    """Genera una reacción aleatoria"""
+    reaction_types = ["LIKE", "LOVE", "HAHA", "WOW", "SAD", "ANGRY"]
+    return {
+        "id": f"reaction_{index}_{int(time.time())}_{random.randint(1000,9999)}",
+        "type": random.choice(reaction_types),
+        "user": f"user{random.randint(1,100)}"
     }
 
 def run_performance_test():
-    """Ejecuta el test de rendimiento completo"""
     insert_times = []
     query_times = []
-    inserted_ids = []
-    
+    reaction_refs = []  # Lista de (postId, commentId, reactionId)
+
     print("\n=== INICIANDO TEST DE RENDIMIENTO API ===")
     print(f"Timestamp: {datetime.now()}")
-    
-    # Fase 1: 50 Inserciones
-    print("\n--- FASE 1: INSERCIONES ---")
+
+    # Fase 1: 50 Inserciones (sobre addReaction)
+    print("\n--- FASE 1: INSERCIONES DE REACCIONES ---")
     for i in range(50):
-        post = generate_random_post(i + 1)
-        
+        # Crear post
+        post = generate_random_post(i+1)
+        r_post = requests.post(f"{BASE_URL}/post", json=post)
+        if r_post.status_code != 200:
+            print(f"Error creando post {i+1}: {r_post.status_code}")
+            continue
+
+        # Crear comentario
+        comment = generate_random_comment(i+1)
+        r_comment = requests.post(f"{BASE_URL}/post/{post['id']}/comment", json=comment)
+        if r_comment.status_code != 200:
+            print(f"Error creando comentario {i+1}: {r_comment.status_code}")
+            continue
+
+        # Crear reacción (esta es la operación medida)
+        reaction = generate_random_reaction(i+1)
         start_time = time.time()
-        response = requests.post(f"{BASE_URL}/post", json=post)
+        r_reaction = requests.post(
+            f"{BASE_URL}/post/{post['id']}/comment/{comment['id']}/reaction",
+            json=reaction
+        )
         end_time = time.time()
-        
+
         duration_ms = (end_time - start_time) * 1000
         insert_times.append(duration_ms)
 
-        if response.status_code == 200:
-            inserted_ids.append(post["id"])
+        if r_reaction.status_code == 200:
+            reaction_refs.append((post["id"], comment["id"], reaction["id"]))
         else:
-            print(f"Error en inserción {i+1}: {response.status_code} {response.text}")
-        
+            print(f"Error creando reacción {i+1}: {r_reaction.status_code} {r_reaction.text}")
+
         print(f"Inserción {i+1:2d}: {duration_ms:6.2f} ms")
-    
-    # Fase 2: 50 Consultas
-    print("\n--- FASE 2: CONSULTAS ---")
+
+    # Fase 2: 50 Consultas (sobre getPost)
+    print("\n--- FASE 2: CONSULTAS DE POSTS ---")
     for i in range(50):
-        if not inserted_ids:
+        if not reaction_refs:
             break
 
-        random_id = random.choice(inserted_ids)
-        
+        postId, _, _ = random.choice(reaction_refs)
+
         start_time = time.time()
-        response = requests.get(f"{BASE_URL}/post/{random_id}")
+        r_get = requests.get(f"{BASE_URL}/post/{postId}")
         end_time = time.time()
-        
+
         duration_ms = (end_time - start_time) * 1000
         query_times.append(duration_ms)
 
-        if response.status_code != 200:
-            print(f"Error en consulta {i+1}: {response.status_code} {response.text}")
-        
+        if r_get.status_code != 200:
+            print(f"Error consultando post {postId}: {r_get.status_code} {r_get.text}")
+
         print(f"Consulta {i+1:2d}: {duration_ms:6.2f} ms")
-    
-    # Generar archivos de resultados
+
+    # Resultados
     print("\n--- GENERANDO ARCHIVOS DE RESULTADOS ---")
     generate_csv_file(insert_times, query_times)
     generate_stats_file(insert_times, query_times)
-    
+
     print("\n=== TEST COMPLETADO ===")
 
 def generate_csv_file(insert_times, query_times):
-    """Genera archivo CSV con los resultados"""
     filename = f"performance_results_{int(time.time())}.csv"
-    
     with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(['Operacion', 'Numero', 'Tiempo_ms'])
-        
-        for i, time_ms in enumerate(insert_times, 1):
-            writer.writerow(['INSERT', i, f"{time_ms:.2f}"])
-        
-        for i, time_ms in enumerate(query_times, 1):
-            writer.writerow(['SELECT', i, f"{time_ms:.2f}"])
-    
+        for i, t in enumerate(insert_times, 1):
+            writer.writerow(['INSERT_REACTION', i, f"{t:.2f}"])
+        for i, t in enumerate(query_times, 1):
+            writer.writerow(['SELECT_POST', i, f"{t:.2f}"])
     print(f"Archivo CSV generado: {filename}")
 
 def generate_stats_file(insert_times, query_times):
@@ -139,9 +161,9 @@ def generate_stats_file(insert_times, query_times):
             f.write(f"Tiempo total del test: {sum(all_times):.2f} ms\n")
     
     print(f"Archivo de estadísticas generado: {filename}")
-
+    
 if __name__ == "__main__":
-    print("Script de prueba de rendimiento API (localhost:8085)")
+    print("Script de prueba de rendimiento API (usando addReaction)")
     try:
         run_performance_test()
     except KeyboardInterrupt:
