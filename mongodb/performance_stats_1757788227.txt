@@ -1,0 +1,25 @@
+==================================================
+ESTADÍSTICAS DE RENDIMIENTO API
+==================================================
+Fecha y hora: 2025-09-13 13:30:27.101041
+Total de operaciones: 100
+
+OPERACIONES DE INSERCIÓN:
+-------------------------
+Número de operaciones: 50
+Tiempo promedio: 15.34 ms
+Tiempo mínimo: 6.41 ms
+Tiempo máximo: 364.53 ms
+
+OPERACIONES DE CONSULTA:
+-------------------------
+Número de operaciones: 50
+Tiempo promedio: 8.04 ms
+Tiempo mínimo: 5.66 ms
+Tiempo máximo: 59.05 ms
+
+ESTADÍSTICAS GENERALES:
+---------------------
+Total de operaciones: 100
+Tiempo promedio general: 11.69 ms
+Tiempo total del test: 1169.12 ms
