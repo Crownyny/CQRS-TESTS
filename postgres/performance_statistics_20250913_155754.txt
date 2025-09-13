@@ -1,7 +1,7 @@
 ============================================================
 ESTADÍSTICAS DE RENDIMIENTO - APLICACIÓN CQRS
 ============================================================
-Fecha y hora: 2025-09-12 15:14:12
+Fecha y hora: 2025-09-13 15:57:54
 URL base: http://localhost:5100
 Número de operaciones por tipo: 50
 
@@ -12,33 +12,33 @@ Consultas exitosas: 50/50 (100.0%)
 
 ESTADÍSTICAS DE INSERCIONES (ms):
 -----------------------------------
-Promedio: 19.34
-Mediana: 18.89
-Mínimo: 9.10
-Máximo: 148.53
-Desviación estándar: 19.15
-Varianza: 366.68
+Promedio: 6.45
+Mediana: 6.38
+Mínimo: 5.25
+Máximo: 8.38
+Desviación estándar: 0.83
+Varianza: 0.68
 
 ESTADÍSTICAS DE CONSULTAS (ms):
 ---------------------------------
-Promedio: 168.65
-Mediana: 161.33
-Mínimo: 145.19
-Máximo: 507.12
-Desviación estándar: 49.82
-Varianza: 2481.74
+Promedio: 233.36
+Mediana: 224.65
+Mínimo: 202.92
+Máximo: 309.99
+Desviación estándar: 26.37
+Varianza: 695.64
 
 ESTADÍSTICAS GENERALES (ms):
 ------------------------------
-Promedio general: 94.00
-Mediana general: 145.56
-Mínimo general: 9.10
-Máximo general: 507.12
-Desviación estándar general: 83.90
-Varianza general: 7039.62
+Promedio general: 119.90
+Mediana general: 105.65
+Mínimo general: 5.25
+Máximo general: 309.99
+Desviación estándar general: 115.53
+Varianza general: 13347.49
 
 COMPARACIÓN COMMAND vs QUERY:
 -----------------------------------
-Promedio INSERT: 19.34 ms
-Promedio QUERY: 168.65 ms
-Las consultas son 8.72x más lentas que las inserciones
+Promedio INSERT: 6.45 ms
+Promedio QUERY: 233.36 ms
+Las consultas son 36.20x más lentas que las inserciones

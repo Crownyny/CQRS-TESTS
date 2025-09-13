@@ -20,114 +20,110 @@ NUM_OPERATIONS = 50
 class PerformanceTest:
     def __init__(self):
         self.results = []
-        self.post_ids = []
-    
+        self.post_id = None   # Post único donde meteremos comentarios
+        self.comment_ids = [] # Guardar los IDs de comentarios
+
     def generate_random_content(self, length=50):
-        """Genera contenido aleatorio para los posts"""
+        """Genera contenido aleatorio para los comentarios"""
         return ''.join(random.choices(string.ascii_letters + string.digits + ' ', k=length))
     
-    def test_post_insertion(self):
-        """Prueba inserción de un post y retorna el tiempo en ms"""
-        post_data = {
-            "content": self.generate_random_content()
-        }
+    def create_base_post(self):
+        """Crea un post inicial para poder insertar comentarios"""
+        post_data = {"content": "Post inicial para pruebas de comentarios"}
+        try:
+            response = requests.post(f"{BASE_URL}/post",
+                                     json=post_data,
+                                     headers={"Content-Type": "application/json"},
+                                     timeout=10)
+            if response.status_code == 200:
+                self.post_id = response.json().get("id")
+                print(f"✓ Post base creado con ID {self.post_id}")
+            else:
+                raise RuntimeError(f"Error creando post base: {response.status_code}")
+        except Exception as e:
+            raise RuntimeError(f"No se pudo crear el post base: {e}")
+    
+    def test_comment_insertion(self):
+        """Inserta un comentario en el post base"""
+        if not self.post_id:
+            raise RuntimeError("No existe post base para insertar comentarios")
+        
+        comment_data = {"content": self.generate_random_content()}
         
         start_time = time.perf_counter()
         try:
-            response = requests.post(f"{BASE_URL}/post", 
-                                   json=post_data,
-                                   headers={"Content-Type": "application/json"},
-                                   timeout=10)
+            response = requests.post(f"{BASE_URL}/post/{self.post_id}/comment",
+                                     json=comment_data,
+                                     headers={"Content-Type": "application/json"},
+                                     timeout=10)
             end_time = time.perf_counter()
+            duration_ms = (end_time - start_time) * 1000
             
             if response.status_code == 200:
-                response_data = response.json()
-                post_id = response_data.get('id')
-                if post_id:
-                    self.post_ids.append(post_id)
-                
-                duration_ms = (end_time - start_time) * 1000
+                comment_id = response.json().get("id")
+                if comment_id:
+                    self.comment_ids.append(comment_id)
                 return duration_ms, True, response.status_code
-            else:
-                duration_ms = (end_time - start_time) * 1000
-                return duration_ms, False, response.status_code
-                
+            return duration_ms, False, response.status_code
+        
         except requests.exceptions.RequestException as e:
             end_time = time.perf_counter()
             duration_ms = (end_time - start_time) * 1000
-            print(f"Error en inserción: {e}")
+            print(f"Error en inserción de comentario: {e}")
             return duration_ms, False, -1
     
-    def test_post_query(self, post_id):
-        """Prueba consulta de un post por ID y retorna el tiempo en ms"""
+    def test_post_query(self):
+        """Consulta el post base con todos sus comentarios"""
+        if not self.post_id:
+            raise RuntimeError("No existe post base para consultar")
+        
         start_time = time.perf_counter()
         try:
-            response = requests.get(f"{BASE_URL}/post/{post_id}", timeout=10)
+            response = requests.get(f"{BASE_URL}/post/{self.post_id}", timeout=10)
             end_time = time.perf_counter()
             
             duration_ms = (end_time - start_time) * 1000
             success = response.status_code == 200
             return duration_ms, success, response.status_code
-            
         except requests.exceptions.RequestException as e:
             end_time = time.perf_counter()
             duration_ms = (end_time - start_time) * 1000
-            print(f"Error en consulta para ID {post_id}: {e}")
+            print(f"Error en consulta del post base: {e}")
             return duration_ms, False, -1
     
     def run_insertion_tests(self):
-        """Ejecuta las pruebas de inserción"""
-        print(f"Ejecutando {NUM_OPERATIONS} pruebas de inserción...")
-        
+        """Ejecuta las pruebas de inserción de comentarios"""
+        print(f"Ejecutando {NUM_OPERATIONS} inserciones de comentarios...")
         for i in range(NUM_OPERATIONS):
-            duration_ms, success, status_code = self.test_post_insertion()
-            
+            duration_ms, success, status_code = self.test_comment_insertion()
             result = {
-                'operation_type': 'INSERT',
+                'operation_type': 'INSERT_COMMENT',
                 'operation_number': i + 1,
                 'duration_ms': duration_ms,
                 'success': success,
                 'status_code': status_code,
                 'timestamp': datetime.now().isoformat()
             }
-            
             self.results.append(result)
             print(f"  Inserción {i+1}: {duration_ms:.2f}ms - {'✓' if success else '✗'}")
-            
-            # Pequeña pausa entre operaciones
             time.sleep(0.1)
     
     def run_query_tests(self):
-        """Ejecuta las pruebas de consulta"""
-        print(f"\nEjecutando {NUM_OPERATIONS} pruebas de consulta...")
-        
-        # Si no tenemos suficientes IDs de posts creados, usamos IDs aleatorios
-        available_ids = self.post_ids.copy()
-        
+        """Ejecuta las pruebas de consulta del post con comentarios"""
+        print(f"\nEjecutando {NUM_OPERATIONS} consultas del post con comentarios...")
         for i in range(NUM_OPERATIONS):
-            if available_ids:
-                # Usar un ID existente
-                post_id = random.choice(available_ids)
-            else:
-                # Usar un ID aleatorio (puede no existir)
-                post_id = random.randint(1, 1000)
-            
-            duration_ms, success, status_code = self.test_post_query(post_id)
-            
+            duration_ms, success, status_code = self.test_post_query()
             result = {
-                'operation_type': 'QUERY',
+                'operation_type': 'QUERY_POST',
                 'operation_number': i + 1,
                 'duration_ms': duration_ms,
                 'success': success,
                 'status_code': status_code,
-                'post_id': post_id,
+                'post_id': self.post_id,
                 'timestamp': datetime.now().isoformat()
             }
-            
             self.results.append(result)
-            print(f"  Consulta {i+1} (ID {post_id}): {duration_ms:.2f}ms - {'✓' if success else '✗'}")
-            
-            # Pequeña pausa entre operaciones
+            print(f"  Consulta {i+1}: {duration_ms:.2f}ms - {'✓' if success else '✗'}")
             time.sleep(0.1)
     
     def save_csv_results(self):
@@ -157,15 +153,15 @@ class PerformanceTest:
     def calculate_and_save_statistics(self):
         """Calcula estadísticas y las guarda en un archivo TXT"""
         # Separar resultados por tipo de operación
-        insert_times = [r['duration_ms'] for r in self.results if r['operation_type'] == 'INSERT' and r['success']]
-        query_times = [r['duration_ms'] for r in self.results if r['operation_type'] == 'QUERY' and r['success']]
+        insert_times = [r['duration_ms'] for r in self.results if r['operation_type'] == 'INSERT_COMMENT' and r['success']]
+        query_times = [r['duration_ms'] for r in self.results if r['operation_type'] == 'QUERY_POST' and r['success']]
         all_times = insert_times + query_times
         
         # Contar operaciones exitosas
         insert_success = len(insert_times)
         query_success = len(query_times)
-        insert_total = len([r for r in self.results if r['operation_type'] == 'INSERT'])
-        query_total = len([r for r in self.results if r['operation_type'] == 'QUERY'])
+        insert_total = len([r for r in self.results if r['operation_type'] == 'INSERT_COMMENT'])
+        query_total = len([r for r in self.results if r['operation_type'] == 'QUERY_POST'])
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"performance_statistics_{timestamp}.txt"
@@ -262,7 +258,7 @@ class PerformanceTest:
 
 
 def main():
-    print("🚀 Iniciando pruebas de rendimiento CQRS")
+    print("🚀 Iniciando pruebas de rendimiento CQRS (Comentarios)")
     print(f"URL: {BASE_URL}")
     print(f"Operaciones por tipo: {NUM_OPERATIONS}\n")
     
@@ -271,18 +267,18 @@ def main():
         response = requests.get(f"{BASE_URL}/actuator/health", timeout=5)
         print("✓ Servidor detectado y activo")
     except:
-        print("⚠️  No se puede conectar al servidor. Asegúrate de que esté ejecutándose en", BASE_URL)
-        print("   Puedes iniciar el servidor con: mvn spring-boot:run")
+        print("⚠️  No se puede conectar al servidor en", BASE_URL)
         return
     
     test = PerformanceTest()
+    test.create_base_post()
     
+
     try:
-        # Ejecutar pruebas
         test.run_insertion_tests()
         test.run_query_tests()
-        
-        # Guardar resultados
+
+                # Guardar resultados
         csv_file = test.save_csv_results()
         stats_file = test.calculate_and_save_statistics()
         
@@ -298,7 +294,5 @@ def main():
         print("\n⏹️  Pruebas interrumpidas por el usuario")
     except Exception as e:
         print(f"\n❌ Error durante las pruebas: {e}")
-
-
 if __name__ == "__main__":
     main()
