@@ -1,0 +1,44 @@
+============================================================
+ESTADÍSTICAS DE RENDIMIENTO - APLICACIÓN CQRS
+============================================================
+Fecha y hora: 2025-09-13 17:05:02
+URL base: http://localhost:5100
+Número de operaciones por tipo: 50
+
+RESUMEN DE OPERACIONES:
+------------------------------
+Inserciones exitosas: 50/50 (100.0%)
+Consultas exitosas: 50/50 (100.0%)
+
+ESTADÍSTICAS DE INSERCIONES (ms):
+-----------------------------------
+Promedio: 14.35
+Mediana: 16.06
+Mínimo: 6.63
+Máximo: 16.96
+Desviación estándar: 3.38
+Varianza: 11.42
+
+ESTADÍSTICAS DE CONSULTAS (ms):
+---------------------------------
+Promedio: 156.06
+Mediana: 152.15
+Mínimo: 132.15
+Máximo: 195.48
+Desviación estándar: 13.25
+Varianza: 175.62
+
+ESTADÍSTICAS GENERALES (ms):
+------------------------------
+Promedio general: 85.21
+Mediana general: 74.56
+Mínimo general: 6.63
+Máximo general: 195.48
+Desviación estándar general: 71.86
+Varianza general: 5163.25
+
+COMPARACIÓN COMMAND vs QUERY:
+-----------------------------------
+Promedio INSERT: 14.35 ms
+Promedio QUERY: 156.06 ms
+Las consultas son 10.87x más lentas que las inserciones
